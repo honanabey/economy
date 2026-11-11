@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Экономическая игра</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #e8f5e9 0%, #c8e6c9 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 2rem 1rem;
+        }
+        .card {
+            max-width: 720px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(6px);
+            border-radius: 2rem;
+            padding: 2rem 1.8rem;
+            box-shadow: 0 20px 50px -10px rgba(30, 70, 40, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #1b4d2e;
+            text-align: center;
+            margin-bottom: 1.8rem;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 8px rgba(30, 100, 50, 0.15);
+        }
+        .role-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        .role-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 1.2rem 1.5rem;
+            font-size: 1.15rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.2px;
+        }
+        .role-btn.seller {
+            background: #2e7d32;
+            color: white;
+            box-shadow: 0 8px 20px -6px #2e7d32;
+        }
+        .role-btn.seller:hover {
+            background: #1b5e20;
+            transform: translateY(-2px);
+        }
+        .role-btn.buyer {
+            background: #1565c0;
+            color: white;
+            box-shadow: 0 8px 20px -6px #1565c0;
+        }
+        .role-btn.buyer:hover {
+            background: #0d47a1;
+            transform: translateY(-2px);
+        }
+        .role-btn.active {
+            outline: 3px solid #ffb300;
+            outline-offset: 2px;
+        }
+        .panel {
+            display: none;
+            animation: fadeIn 0.35s ease;
+        }
+        .panel.visible {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .field-group {
+            background: #f1f8e9;
+            border-radius: 1.2rem;
+            padding: 1.2rem 1.4rem;
+            margin-bottom: 1.2rem;
+            border-left: 5px solid #2e7d32;
+        }
+        .field-group.blue {
+            background: #e3f2fd;
+            border-left-color: #1565c0;
+        }
+        .field-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #2e3d2e;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .field-group.blue .field-label {
+            color: #0d2d5e;
+        }
+        .input-row {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .input-row input {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.8rem 1rem;
+            border: 2px solid #c5e1a5;
+            border-radius: 0.9rem;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border 0.15s;
+            background: white;
+        }
+        .input-row input:focus {
+            outline: none;
+            border-color: #2e7d32;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+        }
+        .field-group.blue .input-row input {
+            border-color: #90caf9;
+        }
+        .field-group.blue .input-row input:focus {
+            border-color: #1565c0;
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.15);
+        }
+        .input-row button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 0.9rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .btn-green {
+            background: #2e7d32;
+            color: white;
+        }
+        .btn-green:hover {
+            background: #1b5e20;
+        }
+        .btn-blue {
+            background: #1565c0;
+            color: white;
+        }
+        .btn-blue:hover {
+            background: #0d47a1;
+        }
+        .stat-display {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1rem 1.4rem;
+            border-radius: 1.2rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+        }
+        .stat-display.money {
+            background: linear-gradient(135deg, #fff8e1, #ffecb3);
+            color: #5d4037;
+            border: 2px solid #ffd54f;
+        }
+        .stat-display.items {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            color: #1b5e20;
+            border: 2px solid #81c784;
+        }
+        .stat-display .stat-icon {
+            font-size: 1.6rem;
+        }
+        .stat-display .stat-value {
+            margin-left: auto;
+            font-size: 1.5rem;
+        }
+        .log-box {
+            background: #fafafa;
+            border-radius: 1rem;
+            padding: 1rem 1.2rem;
+            margin-top: 1rem;
+            border: 1px dashed #bdbdbd;
+            min-height: 50px;
+            font-size: 1rem;
+            color: #424242;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        .log-box .log-title {
+            font-weight: 600;
+            color: #616161;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.4rem;
+        }
+        .log-list {
+            color: #2e7d32;
+            font-weight: 500;
+        }
+        .field-group.blue .log-list {
+            color: #1565c0;
+        }
+        .saved-value {
+            display: inline-block;
+            background: #2e7d32;
+            color: white;
+            padding: 0.35rem 1rem;
+            border-radius: 2rem;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-left: 0.5rem;
+        }
+        .field-group.blue .saved-value {
+            background: #1565c0;
+        }
+        .hint-text {
+            font-size: 0.85rem;
+            color: #757575;
+            margin-top: 0.4rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>💰 Экономическая игра</h1>
+
+        <!-- Выбор роли -->
+        <div class="role-buttons">
+            <button class="role-btn seller" id="btnSeller">🏪 Я — продавец</button>
+            <button class="role-btn buyer" id="btnBuyer">🛒 Я — покупатель</button>
+        </div>
+
+        <!-- ================= ПАНЕЛЬ ПРОДАВЦА ================= -->
+        <div class="panel" id="panelSeller">
+            <!-- Количество вещей (вводится 1 раз) -->
+            <div class="field-group">
+                <label class="field-label">📦 Количество вещей</label>
+                <div class="input-row" id="sellerQtyRow">
+                    <input type="number" id="sellerQtyInput" placeholder="Введите количество" min="0" step="1">
+                    <button class="btn-green" id="sellerQtySave">Сохранить</button>
+                </div>
+                <div id="sellerQtyResult" style="margin-top: 0.7rem; display: none;">
+                    <span class="field-label" style="display:inline;">Количество вещей:</span>
+                    <span class="saved-value" id="sellerQtyValue">0</span>
+                </div>
+            </div>
+
+            <!-- Счётчик Мои деньги -->
+            <div class="stat-display money">
+                <span class="stat-icon">💵</span>
+                <span>Мои деньги</span>
+                <span class="stat-value" id="sellerMoney">0</span>
+            </div>
+
+            <!-- Я продал вещь за... (бесконечно) -->
+            <div class="field-group">
+                <label class="field-label">💸 Я продал вещь за...</label>
+                <div class="input-row">
+                    <input type="number" id="sellerSoldInput" placeholder="Введите сумму" min="0" step="1">
+                    <button class="btn-green" id="sellerSoldAdd">Продать</button>
+                </div>
+                <div class="hint-text">Можно вводить сколько угодно раз — сумма будет прибавляться к «Мои деньги»</div>
+                <div class="log-box" id="sellerLogBox" style="display: none;">
+                    <div class="log-title">История продаж</div>
+                    <div class="log-list" id="sellerLogList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ПАНЕЛЬ ПОКУПАТЕЛЯ ================= -->
+        <div class="panel" id="panelBuyer">
+            <!-- Мои деньги (вводится 1 раз) -->
+            <div class="field-group blue">
+                <label class="field-label">💰 Мои деньги</label>
+                <div class="input-row" id="buyerMoneyRow">
+                    <input type="number" id="buyerMoneyInput" placeholder="Введите сумму" min="0" step="1">
+                    <button class="btn-blue" id="buyerMoneySave">Сохранить</button>
+                </div>
+                <div id="buyerMoneyResult" style="margin-top: 0.7rem; display: none;">
+                    <span class="field-label" style="display:inline;">Мои деньги:</span>
+                    <span class="saved-value" id="buyerMoneyValue">0</span>
+                </div>
+            </div>
+
+            <!-- Счётчик Мои вещи -->
+            <div class="stat-display items">
+                <span class="stat-icon">🛍️</span>
+                <span>Мои вещи</span>
+                <span class="stat-value" id="buyerItemsCount">0</span>
+            </div>
+
+            <!-- Я купил... (бесконечно) -->
+            <div class="field-group blue">
+                <label class="field-label">🛒 Я купил...</label>
+                <div class="input-row">
+                    <input type="text" id="buyerBoughtInput" placeholder="Введите название вещи">
+                    <button class="btn-blue" id="buyerBoughtAdd">Купить</button>
+                </div>
+                <div class="hint-text">Можно вводить сколько угодно раз — вещи будут добавляться через запятую</div>
+                <div class="log-box" id="buyerLogBox" style="display: none;">
+                    <div class="log-title">Я купил:</div>
+                    <div class="log-list" id="buyerLogList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ================== КЛЮЧИ ХРАНЕНИЯ ==================
+            const STORAGE_KEY = 'economy_game_data';
+
+            // ================== СОСТОЯНИЕ ==================
+            let state = {
+                role: null,                 // 'seller' | 'buyer' | null
+                sellerQty: null,            // количество вещей (число или null)
+                sellerMoney: 0,             // мои деньги у продавца
+                sellerHistory: [],          // история продаж (числа)
+                buyerMoney: null,           // деньги покупателя (число или null)
+                buyerItems: []              // список купленных вещей (строки)
+            };
+
+            // ================== ЭЛЕМЕНТЫ DOM ==================
+            const btnSeller = document.getElementById('btnSeller');
+            const btnBuyer = document.getElementById('btnBuyer');
+            const panelSeller = document.getElementById('panelSeller');
+            const panelBuyer = document.getElementById('panelBuyer');
+
+            // Продавец
+            const sellerQtyInput = document.getElementById('sellerQtyInput');
+            const sellerQtySave = document.getElementById('sellerQtySave');
+            const sellerQtyResult = document.getElementById('sellerQtyResult');
+            const sellerQtyValue = document.getElementById('sellerQtyValue');
+            const sellerMoneyEl = document.getElementById('sellerMoney');
+            const sellerSoldInput = document.getElementById('sellerSoldInput');
+            const sellerSoldAdd = document.getElementById('sellerSoldAdd');
+            const sellerLogBox = document.getElementById('sellerLogBox');
+            const sellerLogList = document.getElementById('sellerLogList');
+
+            // Покупатель
+            const buyerMoneyInput = document.getElementById('buyerMoneyInput');
+            const buyerMoneySave = document.getElementById('buyerMoneySave');
+            const buyerMoneyResult = document.getElementById('buyerMoneyResult');
+            const buyerMoneyValue = document.getElementById('buyerMoneyValue');
+            const buyerItemsCountEl = document.getElementById('buyerItemsCount');
+            const buyerBoughtInput = document.getElementById('buyerBoughtInput');
+            const buyerBoughtAdd = document.getElementById('buyerBoughtAdd');
+            const buyerLogBox = document.getElementById('buyerLogBox');
+            const buyerLogList = document.getElementById('buyerLogList');
+
+            // ================== СОХРАНЕНИЕ / ЗАГРУЗКА ==================
+            function saveState() {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                } catch (e) {
+                    console.warn('Ошибка сохранения:', e);
+                }
+            }
+
+            function loadState() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return;
+                    const data = JSON.parse(raw);
+                    if (typeof data !== 'object' || data === null) return;
+
+                    state.role = data.role || null;
+                    state.sellerQty = (data.sellerQty !== undefined && data.sellerQty !== null) ? data.sellerQty : null;
+                    state.sellerMoney = Number(data.sellerMoney) || 0;
+                    state.sellerHistory = Array.isArray(data.sellerHistory) ? data.sellerHistory : [];
+                    state.buyerMoney = (data.buyerMoney !== undefined && data.buyerMoney !== null) ? data.buyerMoney : null;
+                    state.buyerItems = Array.isArray(data.buyerItems) ? data.buyerItems : [];
+                } catch (e) {
+                    console.warn('Ошибка загрузки:', e);
+                }
+            }
+
+            // ================== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ==================
+            function updateSellerUI() {
+                // Количество вещей
+                if (state.sellerQty !== null) {
+                    sellerQtyValue.textContent = state.sellerQty;
+                    sellerQtyResult.style.display = 'block';
+                    sellerQtyInput.value = state.sellerQty;
+                    sellerQtyInput.disabled = true;
+                    sellerQtySave.disabled = true;
+                    sellerQtySave.style.opacity = '0.5';
+                    sellerQtySave.style.cursor = 'default';
+                } else {
+                    sellerQtyResult.style.display = 'none';
+                    sellerQtyInput.disabled = false;
+                    sellerQtySave.disabled = false;
+                    sellerQtySave.style.opacity = '1';
+                    sellerQtySave.style.cursor = 'pointer';
+                }
+
+                // Мои деньги
+                sellerMoneyEl.textContent = state.sellerMoney;
+
+                // История продаж
+                if (state.sellerHistory.length > 0) {
+                    sellerLogBox.style.display = 'block';
+                    sellerLogList.textContent = state.sellerHistory
+                        .map((sum, i) => `продажа №${i + 1} — ${sum} 💵`)
+                        .join(', ');
+                } else {
+                    sellerLogBox.style.display = 'none';
+                    sellerLogList.textContent = '';
+                }
+            }
+
+            function updateBuyerUI() {
+                // Мои деньги
+                if (state.buyerMoney !== null) {
+                    buyerMoneyValue.textContent = state.buyerMoney;
+                    buyerMoneyResult.style.display = 'block';
+                    buyerMoneyInput.value = state.buyerMoney;
+                    buyerMoneyInput.disabled = true;
+                    buyerMoneySave.disabled = true;
+                    buyerMoneySave.style.opacity = '0.5';
+                    buyerMoneySave.style.cursor = 'default';
+                } else {
+                    buyerMoneyResult.style.display = 'none';
+                    buyerMoneyInput.disabled = false;
+                    buyerMoneySave.disabled = false;
+                    buyerMoneySave.style.opacity = '1';
+                    buyerMoneySave.style.cursor = 'pointer';
+                }
+
+                // Мои вещи
+                buyerItemsCountEl.textContent = state.buyerItems.length;
+
+                // Список купленных вещей
+                if (state.buyerItems.length > 0) {
+                    buyerLogBox.style.display = 'block';
+                    buyerLogList.textContent = state.buyerItems.join(', ');
+                } else {
+                    buyerLogBox.style.display = 'none';
+                    buyerLogList.textContent = '';
+                }
+            }
+
+            function updateRoleUI() {
+                // Кнопки
+                btnSeller.classList.toggle('active', state.role === 'seller');
+                btnBuyer.classList.toggle('active', state.role === 'buyer');
+
+                // Панели
+                panelSeller.classList.toggle('visible', state.role === 'seller');
+                panelBuyer.classList.toggle('visible', state.role === 'buyer');
+
+                // Дополнительно обновляем обе панели
+                updateSellerUI();
+                updateBuyerUI();
+            }
+
+            // ================== ОБРАБОТЧИКИ ==================
+            // Выбор роли
+            btnSeller.addEventListener('click', () => {
+                state.role = 'seller';
+                saveState();
+                updateRoleUI();
+            });
+
+            btnBuyer.addEventListener('click', () => {
+                state.role = 'buyer';
+                saveState();
+                updateRoleUI();
+            });
+
+            // --- Продавец: количество вещей (1 раз) ---
+            sellerQtySave.addEventListener('click', () => {
+                const val = sellerQtyInput.value.trim();
+                if (val === '') return;
+                const num = Number(val);
+                if (isNaN(num) || num < 0) return;
+                state.sellerQty = num;
+                saveState();
+                updateSellerUI();
+            });
+
+            // --- Продавец: продать вещь (бесконечно) ---
+            function addSale() {
+                const val = sellerSoldInput.value.trim();
+                if (val === '') return;
+                const num = Number(val);
+                if (isNaN(num) || num < 0) return;
+
+                state.sellerMoney += num;
+                state.sellerHistory.push(num);
+                sellerSoldInput.value = '';
+
+                saveState();
+                updateSellerUI();
+            }
+            sellerSoldAdd.addEventListener('click', addSale);
+            sellerSoldInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') addSale();
+            });
+
+            // --- Покупатель: мои деньги (1 раз) ---
+            buyerMoneySave.addEventListener('click', () => {
+                const val = buyerMoneyInput.value.trim();
+                if (val === '') return;
+                const num = Number(val);
+                if (isNaN(num) || num < 0) return;
+                state.buyerMoney = num;
+                saveState();
+                updateBuyerUI();
+            });
+
+            // --- Покупатель: купить вещь (бесконечно) ---
+            function addPurchase() {
+                const val = buyerBoughtInput.value.trim();
+                if (val === '') return;
+
+                state.buyerItems.push(val);
+                buyerBoughtInput.value = '';
+
+                saveState();
+                updateBuyerUI();
+            }
+            buyerBoughtAdd.addEventListener('click', addPurchase);
+            buyerBoughtInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') addPurchase();
+            });
+
+            // ================== ИНИЦИАЛИЗАЦИЯ ==================
+            loadState();
+            updateRoleUI();
+
+            // Если роль ещё не выбрана — ничего не показываем, только кнопки
+            // (по умолчанию панели скрыты классом .panel без .visible)
+        })();
+    </script>
+</body>
+</html>
